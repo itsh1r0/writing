@@ -16,7 +16,7 @@ jobs:
       - uses: actions/checkout@v4
       - name: Make JSON list
         run: |
-          find . -maxdepth 1 -name "*.md" | sed 's|^\./||' | jq -R -s -c 'split("\n")[:-1]' > files.json
+          find ./files -maxdepth 1 -name "*.md" -type f -printf "%T@ %f\n" | sort -nr | cut -d' ' -f2- | jq -R -s -c 'split("\n")[:-1]' > files.json
       - name: Push changes
         uses: stefanzweifel/git-auto-commit-action@v5
         with:

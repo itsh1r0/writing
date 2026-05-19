@@ -4,52 +4,56 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>MD Viewer</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans:wght@400;700&display=swap" rel="stylesheet">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>📝</text></svg>">
+<link rel="stylesheet" href="https://cdn.simplecss.org/simple.css">
 <style>
   body { 
     margin: 0; 
-    background: #000; 
-    color: #fff; 
-    font-family: sans-serif; 
     display: flex; 
     height: 100vh; 
     overflow: hidden; 
+    font-family: 'Noto Sans', sans-serif;
   }
   #sidebar { 
     width: 250px; 
-    border-right: 2px solid #fff; 
+    border-right: 2px solid var(--border); 
     position: relative; 
     overflow-y: auto; 
     padding-top: 20px; 
   }
   #sidebar::before { 
     content: ''; 
-    position: absolute; 
+    position: fixed; 
     left: 28px; 
     top: 0; 
     bottom: 0; 
     width: 4px; 
-    background: #fff; 
+    background: var(--border); 
     z-index: 1; 
   }
   .nav-item { 
     position: relative; 
-    padding: 25px 0 25px 60px; 
+    padding: 25px 20px 25px 60px; 
     cursor: pointer; 
     z-index: 2; 
     font-size: 1.2em; 
+    word-wrap: break-word;
   }
   .nav-item::before { 
     content: ''; 
     position: absolute; 
     left: 17px; 
-    top: 50%; 
-    transform: translateY(-50%); 
+    top: 25px; 
     width: 26px; 
     height: 26px; 
-    background: #fff; 
+    background: var(--bg);
+    border: 2px solid var(--border);
     border-radius: 50%; 
   }
-  .nav-item:hover { color: #ccc; }
+  .nav-item:hover { color: var(--accent); }
   #main { 
     flex: 1; 
     display: flex; 
@@ -64,9 +68,9 @@
   }
   #date {
     text-align: center;
-    color: #888;
+    color: var(--text-light);
     padding-bottom: 30px;
-    border-bottom: 2px solid #fff;
+    border-bottom: 2px solid var(--border);
     font-size: 1.2em;
   }
   #content { 
@@ -92,11 +96,12 @@
     const dateEl = document.getElementById('date');
     const content = document.getElementById('content');
 
-    async function loadFile(name) {
-      header.textContent = name;
+    async function loadFile(name, isRoot = false) {
+      header.textContent = name.replace(/\.md$/i, '');
       dateEl.textContent = '';
       try {
-        const res = await fetch(encodeURI(name) + '?t=' + Date.now());
+        const path = isRoot ? name : 'files/' + name;
+        const res = await fetch(encodeURI(path) + '?t=' + Date.now());
         if (!res.ok) throw new Error('File not found');
         const lastMod = res.headers.get('Last-Modified');
         if (lastMod) {
@@ -110,20 +115,19 @@
     }
 
     async function init() {
+      loadFile('home.md', true);
       try {
         const res = await fetch('files.json?t=' + Date.now());
         const files = await res.json();
-        files.forEach((f, i) => {
+        files.forEach((f) => {
           let div = document.createElement('div');
           div.className = 'nav-item';
           div.textContent = f;
           div.onclick = () => loadFile(f);
           sidebar.appendChild(div);
-          
-          if (i === 0) loadFile(f);
         });
       } catch (e) {
-        content.innerHTML = '<p>No files.json found. Push to GitHub first.</p>';
+        console.error('No files.json found');
       }
     }
 
