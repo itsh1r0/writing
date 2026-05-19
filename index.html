@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MD Viewer</title>
+<style>
+  body { 
+    margin: 0; 
+    background: #000; 
+    color: #fff; 
+    font-family: sans-serif; 
+    display: flex; 
+    height: 100vh; 
+    overflow: hidden; 
+  }
+  #sidebar { 
+    width: 250px; 
+    border-right: 2px solid #fff; 
+    position: relative; 
+    overflow-y: auto; 
+    padding-top: 20px; 
+  }
+  #sidebar::before { 
+    content: ''; 
+    position: absolute; 
+    left: 28px; 
+    top: 0; 
+    bottom: 0; 
+    width: 4px; 
+    background: #fff; 
+    z-index: 1; 
+  }
+  .nav-item { 
+    position: relative; 
+    padding: 25px 0 25px 60px; 
+    cursor: pointer; 
+    z-index: 2; 
+    font-size: 1.2em; 
+  }
+  .nav-item::before { 
+    content: ''; 
+    position: absolute; 
+    left: 17px; 
+    top: 50%; 
+    transform: translateY(-50%); 
+    width: 26px; 
+    height: 26px; 
+    background: #fff; 
+    border-radius: 50%; 
+  }
+  .nav-item:hover { color: #ccc; }
+  #main { 
+    flex: 1; 
+    display: flex; 
+    flex-direction: column; 
+  }
+  #header { 
+    padding: 40px 50px 10px; 
+    text-align: center; 
+    font-size: 4em; 
+    font-weight: bold; 
+    text-transform: uppercase;
+  }
+  #date {
+    text-align: center;
+    color: #888;
+    padding-bottom: 30px;
+    border-bottom: 2px solid #fff;
+    font-size: 1.2em;
+  }
+  #content { 
+    padding: 50px 80px; 
+    overflow-y: auto; 
+    font-size: 1.3em; 
+    line-height: 1.6; 
+  }
+</style>
+</head>
+<body>
+  <div id="sidebar"></div>
+  <div id="main">
+    <div id="header">NAME FILE</div>
+    <div id="date"></div>
+    <div id="content"></div>
+  </div>
+  
+  <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+  <script>
+    const sidebar = document.getElementById('sidebar');
+    const header = document.getElementById('header');
+    const dateEl = document.getElementById('date');
+    const content = document.getElementById('content');
+
+    async function loadFile(name) {
+      header.textContent = name;
+      dateEl.textContent = '';
+      try {
+        const res = await fetch(name);
+        if (!res.ok) throw new Error('File not found');
+        const lastMod = res.headers.get('Last-Modified');
+        if (lastMod) {
+          dateEl.textContent = 'Last Modified: ' + new Date(lastMod).toLocaleString();
+        }
+        const text = await res.text();
+        content.innerHTML = marked.parse(text);
+      } catch (e) {
+        content.innerHTML = '<p>Missing file. Make .md file in repo.</p>';
+      }
+    }
+
+    async function init() {
+      try {
+        const res = await fetch('files.json');
+        const files = await res.json();
+        files.forEach((f, i) => {
+          let div = document.createElement('div');
+          div.className = 'nav-item';
+          div.textContent = f;
+          div.onclick = () => loadFile(f);
+          sidebar.appendChild(div);
+          
+          if (i === 0) loadFile(f);
+        });
+      } catch (e) {
+        content.innerHTML = '<p>No files.json found. Push to GitHub first.</p>';
+      }
+    }
+
+    init();
+  </script>
+</body>
+</html>
