@@ -96,7 +96,7 @@
       header.textContent = name;
       dateEl.textContent = '';
       try {
-        const res = await fetch(name);
+        const res = await fetch(encodeURI(name) + '?t=' + Date.now());
         if (!res.ok) throw new Error('File not found');
         const lastMod = res.headers.get('Last-Modified');
         if (lastMod) {
@@ -111,7 +111,7 @@
 
     async function init() {
       try {
-        const res = await fetch('files.json');
+        const res = await fetch('files.json?t=' + Date.now());
         const files = await res.json();
         files.forEach((f, i) => {
           let div = document.createElement('div');
